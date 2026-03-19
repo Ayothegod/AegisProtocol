@@ -25,6 +25,7 @@ function SimulatorPage() {
           <SimulatorControls sim={sim} />
           {sim.hasRun && <SimulatorTimeline sim={sim} />}
         </div>
+
         <SimulatorResult sim={sim} />
       </div>
     </>

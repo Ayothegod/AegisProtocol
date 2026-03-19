@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StrategyBuilderRouteImport } from './routes/strategy-builder'
+import { Route as SimulatorRouteImport } from './routes/simulator'
 import { Route as PositionsRouteImport } from './routes/positions'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as HeatmapRouteImport } from './routes/heatmap'
@@ -20,6 +21,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const StrategyBuilderRoute = StrategyBuilderRouteImport.update({
   id: '/strategy-builder',
   path: '/strategy-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimulatorRoute = SimulatorRouteImport.update({
+  id: '/simulator',
+  path: '/simulator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PositionsRoute = PositionsRouteImport.update({
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/heatmap': typeof HeatmapRoute
   '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/simulator': typeof SimulatorRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/heatmap': typeof HeatmapRoute
   '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/simulator': typeof SimulatorRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/heatmap': typeof HeatmapRoute
   '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/simulator': typeof SimulatorRoute
   '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/heatmap'
     | '/leaderboard'
     | '/positions'
+    | '/simulator'
     | '/strategy-builder'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/heatmap'
     | '/leaderboard'
     | '/positions'
+    | '/simulator'
     | '/strategy-builder'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/heatmap'
     | '/leaderboard'
     | '/positions'
+    | '/simulator'
     | '/strategy-builder'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   HeatmapRoute: typeof HeatmapRoute
   LeaderboardRoute: typeof LeaderboardRoute
   PositionsRoute: typeof PositionsRoute
+  SimulatorRoute: typeof SimulatorRoute
   StrategyBuilderRoute: typeof StrategyBuilderRoute
 }
 
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/strategy-builder'
       fullPath: '/strategy-builder'
       preLoaderRoute: typeof StrategyBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulator': {
+      id: '/simulator'
+      path: '/simulator'
+      fullPath: '/simulator'
+      preLoaderRoute: typeof SimulatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/positions': {
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   HeatmapRoute: HeatmapRoute,
   LeaderboardRoute: LeaderboardRoute,
   PositionsRoute: PositionsRoute,
+  SimulatorRoute: SimulatorRoute,
   StrategyBuilderRoute: StrategyBuilderRoute,
 }
 export const routeTree = rootRouteImport
