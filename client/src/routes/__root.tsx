@@ -1,8 +1,16 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import appCss from "../styles.css?url";
+import { WagmiProvider } from "wagmi";
+import { wagmiConfig } from "#/lib/wagmi.config";
+import { queryClient } from "#/lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactivityProvider } from "#/components/providers/ReactivityProvider";
+import { Topbar } from "#/components/layout/TopBar";
+import { Sidebar } from "#/components/layout/Sidebar";
 
 const THEME_INIT_SCRIPT = `(function(){try{var stored=window.localStorage.getItem('theme');var mode=(stored==='light'||stored==='dark'||stored==='auto')?stored:'auto';var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var resolved=mode==='auto'?(prefersDark?'dark':'light'):mode;var root=document.documentElement;root.classList.remove('light','dark');root.classList.add(resolved);if(mode==='auto'){root.removeAttribute('data-theme')}else{root.setAttribute('data-theme',mode)}root.style.colorScheme=resolved;}catch(e){}})();`;
 
@@ -37,8 +45,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <HeadContent />
       </head>
-      <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
-        {children}
+      <body className="font-sans antialiased [wrap-anywhere] selection:bg-[rgba(79,184,178,0.24)]">
+        <TooltipProvider>
+          <RootLayout>{children}</RootLayout>
+        </TooltipProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",
@@ -53,5 +63,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
+  );
+}
+
+function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <ReactivityProvider>
+          <div className="app-shell">
+            <Topbar />
+            <div className="app-body">
+              <Sidebar />
+              <main className="app-main">{children}</main>
+            </div>
+          </div>
+        </ReactivityProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }
