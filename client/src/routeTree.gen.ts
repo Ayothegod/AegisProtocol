@@ -9,13 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StrategyBuilderRouteImport } from './routes/strategy-builder'
 import { Route as PositionsRouteImport } from './routes/positions'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as HeatmapRouteImport } from './routes/heatmap'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AlertFeedRouteImport } from './routes/alert-feed'
 import { Route as IndexRouteImport } from './routes/index'
 
+const StrategyBuilderRoute = StrategyBuilderRouteImport.update({
+  id: '/strategy-builder',
+  path: '/strategy-builder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PositionsRoute = PositionsRouteImport.update({
   id: '/positions',
   path: '/positions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HeatmapRoute = HeatmapRouteImport.update({
+  id: '/heatmap',
+  path: '/heatmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AlertFeedRoute = AlertFeedRouteImport.update({
@@ -32,40 +56,106 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alert-feed': typeof AlertFeedRoute
+  '/analytics': typeof AnalyticsRoute
+  '/heatmap': typeof HeatmapRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alert-feed': typeof AlertFeedRoute
+  '/analytics': typeof AnalyticsRoute
+  '/heatmap': typeof HeatmapRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/alert-feed': typeof AlertFeedRoute
+  '/analytics': typeof AnalyticsRoute
+  '/heatmap': typeof HeatmapRoute
+  '/leaderboard': typeof LeaderboardRoute
   '/positions': typeof PositionsRoute
+  '/strategy-builder': typeof StrategyBuilderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/alert-feed' | '/positions'
+  fullPaths:
+    | '/'
+    | '/alert-feed'
+    | '/analytics'
+    | '/heatmap'
+    | '/leaderboard'
+    | '/positions'
+    | '/strategy-builder'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/alert-feed' | '/positions'
-  id: '__root__' | '/' | '/alert-feed' | '/positions'
+  to:
+    | '/'
+    | '/alert-feed'
+    | '/analytics'
+    | '/heatmap'
+    | '/leaderboard'
+    | '/positions'
+    | '/strategy-builder'
+  id:
+    | '__root__'
+    | '/'
+    | '/alert-feed'
+    | '/analytics'
+    | '/heatmap'
+    | '/leaderboard'
+    | '/positions'
+    | '/strategy-builder'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlertFeedRoute: typeof AlertFeedRoute
+  AnalyticsRoute: typeof AnalyticsRoute
+  HeatmapRoute: typeof HeatmapRoute
+  LeaderboardRoute: typeof LeaderboardRoute
   PositionsRoute: typeof PositionsRoute
+  StrategyBuilderRoute: typeof StrategyBuilderRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/strategy-builder': {
+      id: '/strategy-builder'
+      path: '/strategy-builder'
+      fullPath: '/strategy-builder'
+      preLoaderRoute: typeof StrategyBuilderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/positions': {
       id: '/positions'
       path: '/positions'
       fullPath: '/positions'
       preLoaderRoute: typeof PositionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/heatmap': {
+      id: '/heatmap'
+      path: '/heatmap'
+      fullPath: '/heatmap'
+      preLoaderRoute: typeof HeatmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/alert-feed': {
@@ -88,7 +178,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlertFeedRoute: AlertFeedRoute,
+  AnalyticsRoute: AnalyticsRoute,
+  HeatmapRoute: HeatmapRoute,
+  LeaderboardRoute: LeaderboardRoute,
   PositionsRoute: PositionsRoute,
+  StrategyBuilderRoute: StrategyBuilderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
