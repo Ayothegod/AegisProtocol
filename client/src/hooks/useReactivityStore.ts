@@ -10,6 +10,7 @@ interface ReactivityStore {
   connect: () => void;
   disconnect: () => void;
   addAlert: (alert: AlertEvent) => void;
+  clearAlerts: () => void;
 }
 
 export const useReactivityStore = create<ReactivityStore>((set, get) => ({
@@ -60,4 +61,6 @@ export const useReactivityStore = create<ReactivityStore>((set, get) => ({
   disconnect: () => {
     set({ isConnected: false });
   },
+
+  clearAlerts: () => set({ alerts: [] }),
 }));

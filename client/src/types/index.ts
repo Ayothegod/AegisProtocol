@@ -35,3 +35,12 @@ export interface ProtocolStats {
   atRisk: number;
   valueProtected: bigint;
 }
+
+export interface GuardianHistoryItem {
+  positionId: bigint;
+  action: "alert" | "topup" | "repay";
+  detail: string;
+  txHash: string;
+  timestamp: number;
+  blockNumber: number;
+}
