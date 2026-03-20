@@ -10,13 +10,25 @@ import {
 import {PositionRegistry} from "./PositionRegistry.sol";
 import {HealthCalculator} from "./HealthCalculator.sol";
 import {GuardianEngine} from "./GuardianEngine.sol";
+import {PriceFeed} from "./PriceFeed.sol";
 
 contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
+    address public constant SOMNIA_REACTIVITY_PRECOMPILE =
+        0x0000000000000000000000000000000000000100;
+    bytes32 public constant BLOCK_TICK_SELECTOR =
+        keccak256("BlockTick(uint64)");
+    bytes32 public constant POSITION_REGISTERED_SELECTOR =
+        keccak256("PositionRegistered(uint256,address)");
+    bytes32 public constant POSITION_UPDATED_SELECTOR =
+        keccak256("PositionUpdated(uint256,address)");
+
+    uint64 public checkInterval = 10;
     address public owner;
 
     PositionRegistry public positionRegistry;
     HealthCalculator public healthCalculator;
-    GuardianEngine public guardianEngine;
+
+    PriceFeed public priceFeed;
 
     mapping(uint256 => uint256) public lastHealthFactor;
     mapping(uint256 => bool) public guardianFiredForPosition;
@@ -26,12 +38,11 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         address indexed owner,
         uint256 healthFactor
     );
-
     event HealthStatusUpdated(
         uint256 indexed positionId,
         uint256 newHealthFactor
     );
-
+    event BlockTickCheck(uint64 blockNumber, uint256 positionsChecked);
     event ContractUpdated(string contractName, address newAddress);
 
     modifier onlyOwner() {
@@ -43,11 +54,13 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         address _positionRegistry,
         address _healthCalculator,
         address _guardianEngine
+        address _priceFeed
     ) {
         owner = msg.sender;
         positionRegistry = PositionRegistry(_positionRegistry);
         healthCalculator = HealthCalculator(_healthCalculator);
         guardianEngine = GuardianEngine(_guardianEngine);
+        priceFeed = PriceFeed(_priceFeed);
     }
 
     function _onEvent(
@@ -55,51 +68,91 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         bytes32[] calldata eventTopics,
         bytes calldata data
     ) internal override nonReentrant {
-        // validate emitter
-        if (emitter != address(positionRegistry)) return;
+        // ............... Path 1: PositionRegistry event ....................
+        if (emitter == address(positionRegistry)) {
+            if (eventTopics.length < 2) return;
 
-        // need at least 2 topics
+            uint256 positionId = uint256(eventTopics[1]);
+            _checkPosition(positionId);
+            return;
+        }
+
+        // ............. Path 2: BlockTick system event ....................
+        if (emitter == SOMNIA_REACTIVITY_PRECOMPILE) {
+            if (eventTopics.length > 0 &&
+                eventTopics[0] == BLOCK_TICK_SELECTOR) {
+                _handleBlockTick(eventTopics);
+            }
+            return;
+        }
+    }
+
+    function _handleBlockTick(
+        bytes32[] calldata eventTopics
+    ) internal {
         if (eventTopics.length < 2) return;
 
-        // decode positionId
-        uint256 positionId = uint256(eventTopics[1]);
+        uint64 blockNumber = uint64(uint256(eventTopics[1]));
 
-        // fetch position
-        PositionRegistry.Position memory position = positionRegistry
-            .getPosition(positionId);
+        // only check every N blocks to manage gas costs
+        if (blockNumber % checkInterval != 0) return;
 
-        // must be active
+        // check all active positions
+        uint256 total    = positionRegistry.positionCount();
+        uint256 checked  = 0;
+
+        for (uint256 i = 0; i < total; i++) {
+            PositionRegistry.Position memory position =
+                positionRegistry.getPosition(i);
+
+            if (!position.isActive) continue;
+
+            _checkPosition(i);
+            checked++;
+        }
+
+        emit BlockTickCheck(blockNumber, checked);
+    }
+
+    function _checkPosition(uint256 positionId) internal {
+        PositionRegistry.Position memory position =
+            positionRegistry.getPosition(positionId);
+
         if (!position.isActive) return;
 
-        // calculate health factor
         uint256 healthFactor = healthCalculator.calculateHealthFactor(
             position.collateral,
             position.debt,
-            position.threshold
+            position.threshold,
+            position.collateralToken,
+            position.debtToken
         );
 
-        // always emit health update
+        // always emit health update for frontend
         emit HealthStatusUpdated(positionId, healthFactor);
         lastHealthFactor[positionId] = healthFactor;
 
-        // convert threshold to 1e18 scale
         uint256 thresholdScaled = position.threshold * 1e16;
 
-        // position safe — reset flag
+        // position is safe — reset flag so Guardian can
+        // fire again if it drops below threshold in future
         if (healthFactor >= thresholdScaled) {
             guardianFiredForPosition[positionId] = false;
             return;
         }
 
-        // already fired in this window
+        // already fired in this at-risk window
         if (guardianFiredForPosition[positionId]) return;
 
-        // checks-effects-interactions
         guardianFiredForPosition[positionId] = true;
-
         emit GuardianTriggered(positionId, position.owner, healthFactor);
 
         guardianEngine.execute(positionId);
+    }
+
+        function setCheckInterval(uint64 _interval) external onlyOwner {
+        require(_interval > 0, "Interval must be > 0");
+        checkInterval = _interval;
     }
 
     function setGuardianEngine(address _guardianEngine) external onlyOwner {
@@ -118,6 +171,12 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         require(_healthCalculator != address(0), "Zero address");
         healthCalculator = HealthCalculator(_healthCalculator);
         emit ContractUpdated("HealthCalculator", _healthCalculator);
+    }
+
+    function setPriceFeed(address _priceFeed) external onlyOwner {
+        require(_priceFeed != address(0), "Zero address");
+        priceFeed = PriceFeed(_priceFeed);
+        emit ContractUpdated("PriceFeed", _priceFeed);
     }
 
     function transferOwnership(address newOwner) external onlyOwner {

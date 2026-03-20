@@ -16,6 +16,8 @@ contract PositionRegistry {
         Strategy strategy;
         bool isActive;
         uint256 createdAt;
+        address collateralToken; 
+        address debtToken; 
     }
 
     uint256 public positionCount;
@@ -40,11 +42,15 @@ contract PositionRegistry {
         uint256 collateral,
         uint256 debt,
         uint256 threshold,
-        Strategy strategy
+        Strategy strategy,
+        address collateralToken, 
+        address debtToken
     ) external returns (uint256) {
         require(collateral > 0, "Collateral must be greater than 0");
         require(debt > 0, "Debt must be greater than 0");
         require(threshold > 0, "Threshold must be greater than 0");
+    require(collateralToken != address(0), "Invalid collateral token");
+    require(debtToken != address(0),       "Invalid debt token");
 
         uint256 positionId = positionCount++;
 
@@ -56,10 +62,11 @@ contract PositionRegistry {
             strategy: strategy,
             isActive: true,
             createdAt: block.timestamp
+            collateralToken: collateralToken,
+            debtToken: debtToken
         });
 
         ownerPositions[msg.sender].push(positionId);
-
         emit PositionRegistered(positionId, msg.sender);
 
         return positionId;
