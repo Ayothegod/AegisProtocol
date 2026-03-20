@@ -13,3 +13,5 @@ docs/
 # Dotenv file
 .env
 log.txt
+
+node_modules
