@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+//   Store a user's position (collateral, debt, threshold, strategy)
+// Let users register a new position
+// Let users update their position
+// Let users delete their position
+// Let anyone read a position's details
 contract PositionRegistry {
     enum Strategy {
         ALERT_ONLY,
