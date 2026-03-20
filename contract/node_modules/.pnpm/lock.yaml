@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@somnia-chain/reactivity-contracts':
+        specifier: ^0.1.6
+        version: 0.1.6
+
+packages:
+
+  '@somnia-chain/reactivity-contracts@0.1.6':
+    resolution: {integrity: sha512-PuCu4q1ydHpEwR3kis1HE//wxU7NxLEs1PM6nXZOy0P2c4cbHoA/1FvF/Zv4pFbdWLYzl1k9kdF/orj6h80ILA==}
+
+snapshots:
+
+  '@somnia-chain/reactivity-contracts@0.1.6': {}
