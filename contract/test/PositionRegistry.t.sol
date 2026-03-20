@@ -9,6 +9,8 @@ contract PositionRegistryTest is Test {
 
     address public user1 = makeAddr("user1");
     address public user2 = makeAddr("user2");
+    address constant COLLATERAL_TOKEN = address(0x1); // ETH
+    address constant DEBT_TOKEN = address(0x3); // USDC
 
     uint256 constant COLLATERAL = 1000e18;
     uint256 constant DEBT = 500e18;
@@ -24,7 +26,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
 
         PositionRegistry.Position memory position = registry.getPosition(
@@ -47,19 +51,25 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         registry.registerPosition(
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.AUTO_TOPUP
+            PositionRegistry.Strategy.AUTO_TOPUP,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         registry.registerPosition(
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.AUTO_REPAY
+            PositionRegistry.Strategy.AUTO_REPAY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         vm.stopPrank();
 
@@ -72,13 +82,17 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         registry.registerPosition(
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.AUTO_TOPUP
+            PositionRegistry.Strategy.AUTO_TOPUP,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         vm.stopPrank();
 
@@ -92,7 +106,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
 
         registry.updatePosition(
@@ -100,7 +116,9 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY
+            PositionRegistry.Strategy.AUTO_REPAY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         vm.stopPrank();
 
@@ -122,7 +140,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
         registry.deletePosition(positionId);
         vm.stopPrank();
@@ -139,7 +159,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
 
         vm.prank(user2);
@@ -149,7 +171,9 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY
+            PositionRegistry.Strategy.AUTO_REPAY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
     }
 
@@ -159,7 +183,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
 
         vm.prank(user2);
@@ -174,7 +200,9 @@ contract PositionRegistryTest is Test {
             0,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
     }
 
@@ -185,7 +213,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             0,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
     }
 
@@ -196,7 +226,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             0,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
     }
 
@@ -208,7 +240,56 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
+        );
+    }
+
+    // ── Test: token addresses stored correctly ─────────────
+    function test_TokenAddressesStoredCorrectly() public {
+        vm.prank(user1);
+        uint256 positionId = registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
+        );
+
+        PositionRegistry.Position memory position = registry.getPosition(
+            positionId
+        );
+        assertEq(position.collateralToken, COLLATERAL_TOKEN);
+        assertEq(position.debtToken, DEBT_TOKEN);
+    }
+
+    // ── Test: reverts on zero collateral token ─────────────
+    function test_RevertOnZeroCollateralToken() public {
+        vm.prank(user1);
+        vm.expectRevert("Invalid collateral token");
+        registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            address(0), // zero address — should revert
+            DEBT_TOKEN
+        );
+    }
+
+    // ── Test: reverts on zero debt token ──────────────────
+    function test_RevertOnZeroDebtToken() public {
+        vm.prank(user1);
+        vm.expectRevert("Invalid debt token");
+        registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            address(0) // zero address — should revert
         );
     }
 }
