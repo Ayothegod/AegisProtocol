@@ -88,6 +88,8 @@ contract GuardianEngineTest is Test {
         // wire up — engine only accepts calls from monitor
         engine.setGuardianMonitor(address(monitor));
 
+        registry.setAuthorizedUpdater(address(engine), true);
+
         // set a default price so all tests start with known state
         // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8); // $2000 ETH
         // priceFeed.updatePrice(DEBT_TOKEN, 1e8);
