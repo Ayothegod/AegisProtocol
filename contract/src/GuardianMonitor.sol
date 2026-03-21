@@ -65,7 +65,7 @@ contract GuardianMonitor is SomniaEventHandler {
     function _onEvent(
         address emitter,
         bytes32[] calldata eventTopics,
-        bytes calldata data
+        bytes calldata
     ) internal override {
         // ............... Path 1: PositionRegistry event ....................
         if (emitter == address(positionRegistry)) {

@@ -69,7 +69,7 @@ contract PositionRegistry {
         require(collateralToken != address(0), "Invalid collateral token");
         require(debtToken != address(0), "Invalid debt token");
 
-        uint256 positionId = positionCount++;
+        uint256 positionId = ++positionCount;
 
         positions[positionId] = Position({
             owner: msg.sender,

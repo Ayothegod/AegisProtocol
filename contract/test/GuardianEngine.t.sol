@@ -556,6 +556,7 @@ contract GuardianEngineTest is Test {
             calculator.isLiquidatable(
                 initial.collateral,
                 initial.debt,
+                initial.threshold,
                 initial.collateralToken,
                 initial.debtToken
             )

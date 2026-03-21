@@ -106,7 +106,9 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
         );
 
         registry.updatePosition(

@@ -16,37 +16,37 @@ contract PriceFeedTest is Test {
     }
 
     function test_InitialPricesSet() public view {
-        assertEq(priceFeed.getPrice(PriceFeed.ETH), 2000_00000000);
-        assertEq(priceFeed.getPrice(PriceFeed.BTC), 60000_00000000);
-        assertEq(priceFeed.getPrice(PriceFeed.USDC), 1_00000000);
-        assertEq(priceFeed.getPrice(PriceFeed.DAI), 1_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.ETH()), 2000_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.BTC()), 60000_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.USDC()), 1_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.DAI()), 1_00000000);
     }
 
     function test_OwnerCanUpdatePrice() public {
         vm.prank(owner);
-        priceFeed.updatePrice(PriceFeed.ETH, 1500_00000000);
-        assertEq(priceFeed.getPrice(PriceFeed.ETH), 1500_00000000);
+        priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.ETH()), 1500_00000000);
     }
 
     function test_NonOwnerCannotUpdatePrice() public {
         vm.prank(user1);
         vm.expectRevert("Not owner");
-        priceFeed.updatePrice(PriceFeed.ETH, 1500_00000000);
+        priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
     }
 
     function test_OwnerCanUpdateMultiplePrices() public {
         address[] memory tokens = new address[](2);
         uint256[] memory prices = new uint256[](2);
-        tokens[0] = PriceFeed.ETH;
-        tokens[1] = PriceFeed.BTC;
+        tokens[0] = priceFeed.ETH();
+        tokens[1] = priceFeed.BTC();
         prices[0] = 1800_00000000;
         prices[1] = 55000_00000000;
 
         vm.prank(owner);
         priceFeed.updatePrices(tokens, prices);
 
-        assertEq(priceFeed.getPrice(PriceFeed.ETH), 1800_00000000);
-        assertEq(priceFeed.getPrice(PriceFeed.BTC), 55000_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.ETH()), 1800_00000000);
+        assertEq(priceFeed.getPrice(priceFeed.BTC()), 55000_00000000);
     }
 
     function test_RevertsOnLengthMismatch() public {
@@ -67,11 +67,11 @@ contract PriceFeedTest is Test {
         vm.prank(owner);
         vm.expectEmit(true, false, false, true);
         emit PriceFeed.PriceUpdated(
-            PriceFeed.ETH,
+            priceFeed.ETH(),
             2000_00000000,
             1500_00000000
         );
-        priceFeed.updatePrice(PriceFeed.ETH, 1500_00000000);
+        priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
     }
 
     function test_OwnerCanTransferOwnership() public {
@@ -87,9 +87,9 @@ contract PriceFeedTest is Test {
     }
 
     function test_SymbolsSetCorrectly() public view {
-        assertEq(priceFeed.tokenSymbols(PriceFeed.ETH), "ETH");
-        assertEq(priceFeed.tokenSymbols(PriceFeed.BTC), "BTC");
-        assertEq(priceFeed.tokenSymbols(PriceFeed.USDC), "USDC");
-        assertEq(priceFeed.tokenSymbols(PriceFeed.DAI), "DAI");
+        assertEq(priceFeed.tokenSymbols(priceFeed.ETH()), "ETH");
+        assertEq(priceFeed.tokenSymbols(priceFeed.BTC()), "BTC");
+        assertEq(priceFeed.tokenSymbols(priceFeed.USDC()), "USDC");
+        assertEq(priceFeed.tokenSymbols(priceFeed.DAI()), "DAI");
     }
 }

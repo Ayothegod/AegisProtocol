@@ -268,7 +268,7 @@ contract GuardianMonitorTest is Test {
             3000e18,
             500e18,
             130,
-            PositionRegistry.Strategy.ALERT_ONLY,
+            PositionRegistry.Strategy.ALERT_ONLY
         );
 
         // call again with recovered position
