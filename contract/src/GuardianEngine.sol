@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.13;
 
 import {PositionRegistry} from "./PositionRegistry.sol";
 import {HealthCalculator} from "./HealthCalculator.sol";
@@ -66,7 +66,7 @@ contract GuardianEngine {
     );
 
     event ActionSkipped(uint256 indexed positionId, string reason);
-
+    event CooldownUpdated(uint256 newPeriod);
     event ContractUpdated(string name, address newAddress);
 
     // ── Modifiers ──────────────────────────────────────────
@@ -118,6 +118,7 @@ contract GuardianEngine {
         bool stillAtRisk = healthCalculator.isLiquidatable(
             position.collateral,
             position.debt,
+            position.threshold,
             position.collateralToken,
             position.debtToken
         );
@@ -236,8 +237,8 @@ contract GuardianEngine {
         // update position in registry
         positionRegistry.updatePosition({
             positionId: positionId,
-            newCollateral: newCollateral,
-            newDebt: position.debt,
+            newCollateral: position.collateral,
+            newDebt: newDebt,
             newThreshold: position.threshold,
             newStrategy: position.strategy
         });
@@ -284,8 +285,12 @@ contract GuardianEngine {
     }
 
     function setCooldownPeriod(uint256 _seconds) external onlyOwner {
+        // cooldownPeriod = _seconds;
+        // emit ContractUpdated("CooldownPeriod", address(0));
+        require(_seconds > 0, "Must be > 0"); // also missing validation
+        require(_seconds >= 30, "Minimum 30 seconds");
         cooldownPeriod = _seconds;
-        emit ContractUpdated("CooldownPeriod", address(0));
+        emit CooldownUpdated(_seconds);
     }
 
     function setTopupBasisPoints(uint256 _bps) external onlyOwner {

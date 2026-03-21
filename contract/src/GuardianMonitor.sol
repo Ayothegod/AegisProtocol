@@ -27,6 +27,7 @@ contract GuardianMonitor is SomniaEventHandler {
     GuardianEngine public guardianEngine;
 
     PriceFeed public priceFeed;
+    // GuardianMonitor stores and exposes priceFeed, and there's a setPriceFeed admin function for it — but the monitor itself never calls priceFeed anywhere. Price reads happen inside HealthCalculator, not the monitor. This is dead state — either remove it or document why it's there (perhaps intended for future direct price checks).
 
     mapping(uint256 => uint256) public lastHealthFactor;
     mapping(uint256 => bool) public guardianFiredForPosition;

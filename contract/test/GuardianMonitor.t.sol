@@ -269,8 +269,6 @@ contract GuardianMonitorTest is Test {
             500e18,
             130,
             PositionRegistry.Strategy.ALERT_ONLY,
-            COLLATERAL_TOKEN,
-            DEBT_TOKEN
         );
 
         // call again with recovered position

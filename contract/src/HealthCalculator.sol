@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 import {PriceFeed} from "./PriceFeed.sol";
@@ -16,6 +16,7 @@ contract HealthCalculator {
     uint256 public constant SAFE_THRESHOLD = 150 * 1e16;
     uint256 public constant WARNING_THRESHOLD = 120 * 1e16;
     uint256 public constant DANGER_THRESHOLD = 110 * 1e16;
+    // getHealthStatus uses SAFE_THRESHOLD and WARNING_THRESHOLD, but DANGER_THRESHOLD is never referenced anywhere in the code. Either use it as the boundary for the DANGER enum value, or remove it to avoid confusion about what it's supposed to enforce.
 
     constructor(address _priceFeed) {
         priceFeed = PriceFeed(_priceFeed);

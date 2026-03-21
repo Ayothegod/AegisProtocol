@@ -106,7 +106,7 @@ contract PositionRegistryTest is Test {
             COLLATERAL,
             DEBT,
             THRESHOLD,
-            PositionRegistry.Strategy.ALERT_ONLY,
+            PositionRegistry.Strategy.ALERT_ONLY
         );
 
         registry.updatePosition(
@@ -114,7 +114,7 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY,
+            PositionRegistry.Strategy.AUTO_REPAY
         );
         vm.stopPrank();
 
@@ -167,7 +167,7 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY,
+            PositionRegistry.Strategy.AUTO_REPAY
         );
     }
 
@@ -311,7 +311,7 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY,
+            PositionRegistry.Strategy.AUTO_REPAY
         );
 
         PositionRegistry.Position memory position = registry.getPosition(
@@ -341,7 +341,7 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY,
+            PositionRegistry.Strategy.AUTO_REPAY
         );
     }
 
@@ -375,7 +375,7 @@ contract PositionRegistryTest is Test {
             2000e18,
             800e18,
             200,
-            PositionRegistry.Strategy.AUTO_REPAY,
+            PositionRegistry.Strategy.AUTO_REPAY
         );
     }
 }

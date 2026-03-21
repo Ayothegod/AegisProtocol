@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 contract PositionRegistry {
@@ -95,7 +95,7 @@ contract PositionRegistry {
         uint256 newDebt,
         uint256 newThreshold,
         Strategy newStrategy
-    ) external onlyOwnerOrAuthorized(positionId) positionExists(positionId) {
+    ) external positionExists(positionId) onlyOwnerOrAuthorized(positionId) {
         Position storage position = positions[positionId];
 
         position.collateral = newCollateral;
@@ -109,6 +109,7 @@ contract PositionRegistry {
     function deletePosition(
         uint256 positionId
     ) external onlyOwner(positionId) positionExists(positionId) {
+        // Soft delete - we want to be able to query active and inactive positions
         positions[positionId].isActive = false;
         emit PositionDeleted(positionId, msg.sender);
     }
