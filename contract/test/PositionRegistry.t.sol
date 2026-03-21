@@ -107,8 +107,6 @@ contract PositionRegistryTest is Test {
             DEBT,
             THRESHOLD,
             PositionRegistry.Strategy.ALERT_ONLY,
-            COLLATERAL_TOKEN,
-            DEBT_TOKEN
         );
 
         registry.updatePosition(
@@ -117,8 +115,6 @@ contract PositionRegistryTest is Test {
             800e18,
             200,
             PositionRegistry.Strategy.AUTO_REPAY,
-            COLLATERAL_TOKEN,
-            DEBT_TOKEN
         );
         vm.stopPrank();
 
@@ -165,15 +161,13 @@ contract PositionRegistryTest is Test {
         );
 
         vm.prank(user2);
-        vm.expectRevert("Not position owner");
+        vm.expectRevert("Not authorized");
         registry.updatePosition(
             positionId,
             2000e18,
             800e18,
             200,
             PositionRegistry.Strategy.AUTO_REPAY,
-            COLLATERAL_TOKEN,
-            DEBT_TOKEN
         );
     }
 
@@ -290,6 +284,98 @@ contract PositionRegistryTest is Test {
             PositionRegistry.Strategy.ALERT_ONLY,
             COLLATERAL_TOKEN,
             address(0) // zero address — should revert
+        );
+    }
+
+    // ── Test: authorized updater can update position ───────
+    function test_AuthorizedUpdaterCanUpdate() public {
+        address engine = makeAddr("engine");
+
+        // grant authorization
+        registry.setAuthorizedUpdater(engine, true);
+
+        vm.prank(user1);
+        uint256 positionId = registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
+        );
+
+        // engine updates on behalf of user — should work
+        vm.prank(engine);
+        registry.updatePosition(
+            positionId,
+            2000e18,
+            800e18,
+            200,
+            PositionRegistry.Strategy.AUTO_REPAY,
+        );
+
+        PositionRegistry.Position memory position = registry.getPosition(
+            positionId
+        );
+        assertEq(position.collateral, 2000e18);
+    }
+
+    // ── Test: unauthorized address cannot update ───────────
+    function test_UnauthorizedCannotUpdate() public {
+        address rando = makeAddr("rando");
+
+        vm.prank(user1);
+        uint256 positionId = registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
+        );
+
+        vm.prank(rando);
+        vm.expectRevert("Not authorized");
+        registry.updatePosition(
+            positionId,
+            2000e18,
+            800e18,
+            200,
+            PositionRegistry.Strategy.AUTO_REPAY,
+        );
+    }
+
+    // ── Test: only contract owner can set authorized updater
+    function test_OnlyContractOwnerCanSetAuthorizedUpdater() public {
+        vm.prank(user1);
+        vm.expectRevert("Not contract owner");
+        registry.setAuthorizedUpdater(makeAddr("engine"), true);
+    }
+
+    // ── Test: can revoke authorization ─────────────────────
+    function test_CanRevokeAuthorization() public {
+        address engine = makeAddr("engine");
+        registry.setAuthorizedUpdater(engine, true);
+        registry.setAuthorizedUpdater(engine, false); // revoke
+
+        vm.prank(user1);
+        uint256 positionId = registry.registerPosition(
+            COLLATERAL,
+            DEBT,
+            THRESHOLD,
+            PositionRegistry.Strategy.ALERT_ONLY,
+            COLLATERAL_TOKEN,
+            DEBT_TOKEN
+        );
+
+        vm.prank(engine);
+        vm.expectRevert("Not authorized");
+        registry.updatePosition(
+            positionId,
+            2000e18,
+            800e18,
+            200,
+            PositionRegistry.Strategy.AUTO_REPAY,
         );
     }
 }

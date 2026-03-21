@@ -16,17 +16,25 @@ contract PositionRegistry {
         Strategy strategy;
         bool isActive;
         uint256 createdAt;
-        address collateralToken; 
-        address debtToken; 
+        address collateralToken;
+        address debtToken;
     }
 
     uint256 public positionCount;
+    address public contractOwner;
+
     mapping(uint256 => Position) public positions;
     mapping(address => uint256[]) public ownerPositions;
+    mapping(address => bool) public authorizedUpdaters;
 
     event PositionRegistered(uint256 indexed positionId, address indexed owner);
     event PositionUpdated(uint256 indexed positionId, address indexed owner);
     event PositionDeleted(uint256 indexed positionId, address indexed owner);
+
+    modifier onlyContractOwner() {
+        require(msg.sender == contractOwner, "Not contract owner");
+        _;
+    }
 
     modifier onlyOwner(uint256 positionId) {
         _onlyOwner(positionId);
@@ -38,19 +46,28 @@ contract PositionRegistry {
         _;
     }
 
+    modifier onlyOwnerOrAuthorized(uint256 positionId) {
+        _onlyOwnerOrAuthorized(positionId);
+        _;
+    }
+
+    constructor() {
+        contractOwner = msg.sender;
+    }
+
     function registerPosition(
         uint256 collateral,
         uint256 debt,
         uint256 threshold,
         Strategy strategy,
-        address collateralToken, 
+        address collateralToken,
         address debtToken
     ) external returns (uint256) {
         require(collateral > 0, "Collateral must be greater than 0");
         require(debt > 0, "Debt must be greater than 0");
         require(threshold > 0, "Threshold must be greater than 0");
-    require(collateralToken != address(0), "Invalid collateral token");
-    require(debtToken != address(0),       "Invalid debt token");
+        require(collateralToken != address(0), "Invalid collateral token");
+        require(debtToken != address(0), "Invalid debt token");
 
         uint256 positionId = positionCount++;
 
@@ -61,7 +78,7 @@ contract PositionRegistry {
             threshold: threshold,
             strategy: strategy,
             isActive: true,
-            createdAt: block.timestamp
+            createdAt: block.timestamp,
             collateralToken: collateralToken,
             debtToken: debtToken
         });
@@ -78,7 +95,7 @@ contract PositionRegistry {
         uint256 newDebt,
         uint256 newThreshold,
         Strategy newStrategy
-    ) external onlyOwner(positionId) positionExists(positionId) {
+    ) external onlyOwnerOrAuthorized(positionId) positionExists(positionId) {
         Position storage position = positions[positionId];
 
         position.collateral = newCollateral;
@@ -108,6 +125,20 @@ contract PositionRegistry {
         return ownerPositions[owner];
     }
 
+    function setAuthorizedUpdater(
+        address updater,
+        bool authorized
+    ) external onlyContractOwner {
+        authorizedUpdaters[updater] = authorized;
+    }
+
+    function transferContractOwnership(
+        address newOwner
+    ) external onlyContractOwner {
+        require(newOwner != address(0), "Zero address");
+        contractOwner = newOwner;
+    }
+
     function _onlyOwner(uint256 positionId) internal view {
         require(
             positions[positionId].owner == msg.sender,
@@ -117,5 +148,13 @@ contract PositionRegistry {
 
     function _positionExists(uint256 positionId) internal view {
         require(positions[positionId].isActive, "Position does not exist");
+    }
+
+    function _onlyOwnerOrAuthorized(uint256 positionId) internal view {
+        require(
+            positions[positionId].owner == msg.sender ||
+                authorizedUpdaters[msg.sender],
+            "Not authorized"
+        );
     }
 }

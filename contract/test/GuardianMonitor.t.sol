@@ -6,6 +6,7 @@ import "../src/GuardianMonitor.sol";
 import "../src/PositionRegistry.sol";
 import "../src/HealthCalculator.sol";
 import "../src/GuardianEngine.sol";
+import "../src/PriceFeed.sol";
 
 contract GuardianMonitorTest is Test {
     GuardianMonitor public monitor;
@@ -76,8 +77,8 @@ contract GuardianMonitorTest is Test {
 
     // ── Test 2: Guardian fires when below threshold ────────
     function test_GuardianFiresWhenBelowThreshold() public {
-        vm.prank(user1);
         _makePositionDangerous();
+        vm.prank(user1);
 
         // collateral 1000, debt 900, threshold 130 → hf = 1.11 → below 1.30
         uint256 positionId = registry.registerPosition(
@@ -157,8 +158,8 @@ contract GuardianMonitorTest is Test {
 
     // ── Test 5: Duplicate trigger protection ───────────────
     function test_NoDuplicateTrigger() public {
-        vm.prank(user1);
         _makePositionDangerous();
+        vm.prank(user1);
 
         uint256 positionId = registry.registerPosition(
             1000e18,
@@ -236,8 +237,8 @@ contract GuardianMonitorTest is Test {
 
     // ── Test 8: Flag resets when position recovers ─────────
     function test_FlagResetsWhenPositionRecovers() public {
-        vm.startPrank(user1);
         _makePositionDangerous();
+        vm.startPrank(user1);
 
         uint256 positionId = registry.registerPosition(
             1000e18,

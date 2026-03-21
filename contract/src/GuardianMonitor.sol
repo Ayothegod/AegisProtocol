@@ -4,15 +4,12 @@ pragma solidity ^0.8.13;
 import {
     SomniaEventHandler
 } from "@somnia-chain/reactivity-contracts/contracts/SomniaEventHandler.sol";
-import {
-    ReentrancyGuard
-} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {PositionRegistry} from "./PositionRegistry.sol";
 import {HealthCalculator} from "./HealthCalculator.sol";
 import {GuardianEngine} from "./GuardianEngine.sol";
 import {PriceFeed} from "./PriceFeed.sol";
 
-contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
+contract GuardianMonitor is SomniaEventHandler {
     address public constant SOMNIA_REACTIVITY_PRECOMPILE =
         0x0000000000000000000000000000000000000100;
     bytes32 public constant BLOCK_TICK_SELECTOR =
@@ -27,6 +24,7 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
 
     PositionRegistry public positionRegistry;
     HealthCalculator public healthCalculator;
+    GuardianEngine public guardianEngine;
 
     PriceFeed public priceFeed;
 
@@ -53,7 +51,7 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
     constructor(
         address _positionRegistry,
         address _healthCalculator,
-        address _guardianEngine
+        address _guardianEngine,
         address _priceFeed
     ) {
         owner = msg.sender;
@@ -67,7 +65,7 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         address emitter,
         bytes32[] calldata eventTopics,
         bytes calldata data
-    ) internal override nonReentrant {
+    ) internal override {
         // ............... Path 1: PositionRegistry event ....................
         if (emitter == address(positionRegistry)) {
             if (eventTopics.length < 2) return;
@@ -79,17 +77,16 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
 
         // ............. Path 2: BlockTick system event ....................
         if (emitter == SOMNIA_REACTIVITY_PRECOMPILE) {
-            if (eventTopics.length > 0 &&
-                eventTopics[0] == BLOCK_TICK_SELECTOR) {
+            if (
+                eventTopics.length > 0 && eventTopics[0] == BLOCK_TICK_SELECTOR
+            ) {
                 _handleBlockTick(eventTopics);
             }
             return;
         }
     }
 
-    function _handleBlockTick(
-        bytes32[] calldata eventTopics
-    ) internal {
+    function _handleBlockTick(bytes32[] calldata eventTopics) internal {
         if (eventTopics.length < 2) return;
 
         uint64 blockNumber = uint64(uint256(eventTopics[1]));
@@ -98,12 +95,12 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         if (blockNumber % checkInterval != 0) return;
 
         // check all active positions
-        uint256 total    = positionRegistry.positionCount();
-        uint256 checked  = 0;
+        uint256 total = positionRegistry.positionCount();
+        uint256 checked = 0;
 
         for (uint256 i = 0; i < total; i++) {
-            PositionRegistry.Position memory position =
-                positionRegistry.getPosition(i);
+            PositionRegistry.Position memory position = positionRegistry
+                .getPosition(i);
 
             if (!position.isActive) continue;
 
@@ -115,15 +112,14 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
     }
 
     function _checkPosition(uint256 positionId) internal {
-        PositionRegistry.Position memory position =
-            positionRegistry.getPosition(positionId);
+        PositionRegistry.Position memory position = positionRegistry
+            .getPosition(positionId);
 
         if (!position.isActive) return;
 
         uint256 healthFactor = healthCalculator.calculateHealthFactor(
             position.collateral,
             position.debt,
-            position.threshold,
             position.collateralToken,
             position.debtToken
         );
@@ -150,7 +146,7 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
         guardianEngine.execute(positionId);
     }
 
-        function setCheckInterval(uint64 _interval) external onlyOwner {
+    function setCheckInterval(uint64 _interval) external onlyOwner {
         require(_interval > 0, "Interval must be > 0");
         checkInterval = _interval;
     }
@@ -187,13 +183,14 @@ contract GuardianMonitor is SomniaEventHandler, ReentrancyGuard {
     function resetGuardianFlag(uint256 positionId) external onlyOwner {
         guardianFiredForPosition[positionId] = false;
     }
-}
 
-// ── Test helper — REMOVE BEFORE MAINNET ────────────────
-function exposed_onEvent(
-    address emitter,
-    bytes32[] calldata eventTopics,
-    bytes calldata data
-) external {
-    _onEvent(emitter, eventTopics, data);
+    // ── Test helper — REMOVE BEFORE MAINNET ────────────────
+    function exposed_onEvent(
+        address emitter,
+        bytes32[] calldata eventTopics,
+        bytes calldata data
+    ) external {
+        // require(block.chainid == 31337, "Test only");
+        _onEvent(emitter, eventTopics, data);
+    }
 }

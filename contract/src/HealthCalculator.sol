@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "./PositionRegistry.sol";
-import {PriceFeed} from "./PriceFeed.sol"
+import {PriceFeed} from "./PriceFeed.sol";
 
 contract HealthCalculator {
-    uint256 public constant PRECISION = 1e18;
-
     enum HealthStatus {
         SAFE,
         WARNING,
         DANGER
     }
 
-    uint256 public constant SAFE_THRESHOLD = 150 * 1e16;
-    uint256 public constant WARNING_THRESHOLD = 120 * 1e16
-    uint256 public constant DANGER_THRESHOLD = 110 * 1e16
+    PriceFeed public priceFeed;
 
+    uint256 public constant PRECISION = 1e18;
+    uint256 public constant SAFE_THRESHOLD = 150 * 1e16;
+    uint256 public constant WARNING_THRESHOLD = 120 * 1e16;
+    uint256 public constant DANGER_THRESHOLD = 110 * 1e16;
 
     constructor(address _priceFeed) {
         priceFeed = PriceFeed(_priceFeed);
@@ -25,10 +24,9 @@ contract HealthCalculator {
     function calculateHealthFactor(
         uint256 collateral,
         uint256 debt,
-        uint256 liquidationThreshold,
         address collateralToken,
         address debtToken
-    ) public pure returns (uint256) {
+    ) public view returns (uint256) {
         require(debt > 0, "Debt cannot be zero");
 
         uint256 collateralPrice = priceFeed.getPrice(collateralToken);
@@ -52,19 +50,6 @@ contract HealthCalculator {
         }
     }
 
-    // function isLiquidatable(
-    //     PositionRegistry.Position memory position,
-    //     uint256 liquidationThreshold
-    // ) public pure returns (bool) {
-    //     uint256 healthFactor = calculateHealthFactor(
-    //         position.collateral,
-    //         position.debt,
-    //         liquidationThreshold
-    //     );
-
-    //     return healthFactor <= DANGER_THRESHOLD;
-    // }
-
     function isLiquidatable(
         uint256 collateral,
         uint256 debt,
@@ -73,8 +58,10 @@ contract HealthCalculator {
         address debtToken
     ) public view returns (bool) {
         uint256 healthFactor = calculateHealthFactor(
-            collateral, debt, threshold,
-            collateralToken, debtToken
+            collateral,
+            debt,
+            collateralToken,
+            debtToken
         );
         uint256 thresholdScaled = threshold * 1e16;
         return healthFactor < thresholdScaled;

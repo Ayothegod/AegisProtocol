@@ -4,12 +4,11 @@ pragma solidity ^0.8.13;
 import "forge-std/Test.sol";
 import "../src/HealthCalculator.sol";
 import "../src/PositionRegistry.sol";
+import "../src/PriceFeed.sol";
 
 contract HealthCalculatorTest is Test {
     PriceFeed public priceFeed;
     HealthCalculator public calculator;
-
-    uint256 constant LT = 80;
 
     address constant COLLATERAL_TOKEN = address(0x1); // ETH  — $2000
     address constant DEBT_TOKEN = address(0x3); // USDC — $1
@@ -17,13 +16,15 @@ contract HealthCalculatorTest is Test {
     function setUp() public {
         priceFeed = new PriceFeed();
         calculator = new HealthCalculator(address(priceFeed));
+
+        priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
+        priceFeed.updatePrice(DEBT_TOKEN, 1e8);
     }
 
     function test_CalculatesHealthFactorCorrectly() public view {
         uint256 hf = calculator.calculateHealthFactor(
             10000,
             6000,
-            LT,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -39,7 +40,6 @@ contract HealthCalculatorTest is Test {
         uint256 hf = calculator.calculateHealthFactor(
             10000,
             3000,
-            LT,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -52,9 +52,8 @@ contract HealthCalculatorTest is Test {
     function test_ReturnsWarningWhenCollateralIsMedium() public {
         priceFeed.updatePrice(COLLATERAL_TOKEN, 1e8); // $1 temporarily
         uint256 hf = calculator.calculateHealthFactor(
+            13000,
             10000,
-            6000,
-            LT,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -62,15 +61,14 @@ contract HealthCalculatorTest is Test {
             uint(calculator.getHealthStatus(hf)),
             uint(HealthCalculator.HealthStatus.WARNING)
         );
-        priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
+        // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
     }
 
     function test_ReturnsDangerWhenCollateralIsLow() public {
         priceFeed.updatePrice(COLLATERAL_TOKEN, 1e8); // $1 temporarily
         uint256 hf = calculator.calculateHealthFactor(
             10000,
-            8000,
-            LT,
+            10000,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -78,7 +76,7 @@ contract HealthCalculatorTest is Test {
             uint(calculator.getHealthStatus(hf)),
             uint(HealthCalculator.HealthStatus.DANGER)
         );
-        priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
+        // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
     }
 
     function test_IsLiquidatableWhenBelowThreshold() public {
@@ -86,7 +84,7 @@ contract HealthCalculatorTest is Test {
         PositionRegistry.Position memory position = PositionRegistry.Position({
             owner: address(this),
             collateral: 10000,
-            debt: 8000,
+            debt: 9500,
             threshold: 120,
             strategy: PositionRegistry.Strategy.ALERT_ONLY,
             isActive: true,
@@ -94,8 +92,16 @@ contract HealthCalculatorTest is Test {
             collateralToken: COLLATERAL_TOKEN,
             debtToken: DEBT_TOKEN
         });
-        assertTrue(calculator.isLiquidatable(position));
-        priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
+        assertTrue(
+            calculator.isLiquidatable(
+                position.collateral,
+                position.debt,
+                position.threshold,
+                position.collateralToken,
+                position.debtToken
+            )
+        );
+        // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
     }
 
     function test_IsNotLiquidatableWhenAboveThreshold() public view {
@@ -110,7 +116,15 @@ contract HealthCalculatorTest is Test {
             collateralToken: COLLATERAL_TOKEN,
             debtToken: DEBT_TOKEN
         });
-        assertFalse(calculator.isLiquidatable(position));
+        assertFalse(
+            calculator.isLiquidatable(
+                position.collateral,
+                position.debt,
+                position.threshold,
+                position.collateralToken,
+                position.debtToken
+            )
+        );
     }
 
     function test_RevertsWhenDebtIsZero() public {
@@ -118,7 +132,6 @@ contract HealthCalculatorTest is Test {
         calculator.calculateHealthFactor(
             10000,
             0,
-            LT,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -128,7 +141,6 @@ contract HealthCalculatorTest is Test {
         uint256 hfBefore = calculator.calculateHealthFactor(
             1e18,
             1000e18,
-            130,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
@@ -138,21 +150,19 @@ contract HealthCalculatorTest is Test {
         uint256 hfAfter = calculator.calculateHealthFactor(
             1e18,
             1000e18,
-            130,
             COLLATERAL_TOKEN,
             DEBT_TOKEN
         );
 
         assertGt(hfBefore, hfAfter);
 
-        priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
+        // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
     }
 
     function test_SameTokenBothSidesIsPureRatio() public view {
         uint256 hf = calculator.calculateHealthFactor(
             2000,
             1000,
-            130,
             COLLATERAL_TOKEN,
             COLLATERAL_TOKEN // same token
         );
@@ -162,12 +172,6 @@ contract HealthCalculatorTest is Test {
     function test_RevertsWhenPriceNotSet() public {
         address unknownToken = address(0x99);
         vm.expectRevert("Price not set");
-        calculator.calculateHealthFactor(
-            1000,
-            500,
-            130,
-            unknownToken,
-            DEBT_TOKEN
-        );
+        calculator.calculateHealthFactor(1000, 500, unknownToken, DEBT_TOKEN);
     }
 }

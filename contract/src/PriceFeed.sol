@@ -49,17 +49,17 @@ contract PriceFeed {
         emit PriceUpdated(token, oldPrice, newPrice);
     }
 
-    // function updatePrices(
-    //     address[] calldata tokens,
-    //     uint256[] calldata newPrices
-    // ) external onlyOwner {
-    //     require(tokens.length == newPrices.length, "Length mismatch");
-    //     for (uint256 i = 0; i < tokens.length; i++) {
-    //         uint256 oldPrice = prices[tokens[i]];
-    //         prices[tokens[i]] = newPrices[i];
-    //         emit PriceUpdated(tokens[i], oldPrice, newPrices[i]);
-    //     }
-    // }
+    function updatePrices(
+        address[] calldata tokens,
+        uint256[] calldata newPrices
+    ) external onlyOwner {
+        require(tokens.length == newPrices.length, "Length mismatch");
+        for (uint256 i = 0; i < tokens.length; i++) {
+            uint256 oldPrice = prices[tokens[i]];
+            prices[tokens[i]] = newPrices[i];
+            emit PriceUpdated(tokens[i], oldPrice, newPrices[i]);
+        }
+    }
 
     function getPrice(address token) external view returns (uint256) {
         uint256 price = prices[token];
