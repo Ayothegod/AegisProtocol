@@ -23,15 +23,19 @@ contract PriceFeedTest is Test {
     }
 
     function test_OwnerCanUpdatePrice() public {
-        vm.prank(owner);
+        vm.startPrank(owner);
+        // address eth = priceFeed.ETH();
         priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
         assertEq(priceFeed.getPrice(priceFeed.ETH()), 1500_00000000);
+        vm.stopPrank();
     }
 
     function test_NonOwnerCannotUpdatePrice() public {
+        address eth = priceFeed.ETH();
+
         vm.prank(user1);
         vm.expectRevert("Not owner");
-        priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
+        priceFeed.updatePrice(eth, 1500_00000000);
     }
 
     function test_OwnerCanUpdateMultiplePrices() public {
@@ -64,14 +68,16 @@ contract PriceFeedTest is Test {
     }
 
     function test_EmitsPriceUpdatedEvent() public {
+        address eth = priceFeed.ETH();
+        // set initial price first
         vm.prank(owner);
+        priceFeed.updatePrice(eth, 2000_00000000);
+
+        vm.startPrank(owner);
         vm.expectEmit(true, false, false, true);
-        emit PriceFeed.PriceUpdated(
-            priceFeed.ETH(),
-            2000_00000000,
-            1500_00000000
-        );
-        priceFeed.updatePrice(priceFeed.ETH(), 1500_00000000);
+        emit PriceFeed.PriceUpdated(eth, 2000_00000000, 1500_00000000);
+        priceFeed.updatePrice(eth, 1500_00000000);
+        vm.stopPrank();
     }
 
     function test_OwnerCanTransferOwnership() public {
