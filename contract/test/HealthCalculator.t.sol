@@ -155,7 +155,6 @@ contract HealthCalculatorTest is Test {
         );
 
         assertGt(hfBefore, hfAfter);
-
         // priceFeed.updatePrice(COLLATERAL_TOKEN, 2000e8);
     }
 

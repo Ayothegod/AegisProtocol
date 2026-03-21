@@ -9,7 +9,6 @@ contract HealthCalculator {
         WARNING,
         DANGER
     }
-
     PriceFeed public priceFeed;
 
     uint256 public constant PRECISION = 1e18;
