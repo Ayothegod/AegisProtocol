@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "forge-std/Test.sol";
-import "../src/HealthCalculator.sol";
-import "../src/PositionRegistry.sol";
-import "../src/PriceFeed.sol";
+import {Test} from "forge-std/Test.sol";
+import {PositionRegistry} from "../src/PositionRegistry.sol";
+import {HealthCalculator} from "../src/HealthCalculator.sol";
+import {PriceFeed} from "../src/PriceFeed.sol";
 
 contract HealthCalculatorTest is Test {
     PriceFeed public priceFeed;
