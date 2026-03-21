@@ -99,7 +99,7 @@ contract GuardianMonitor is SomniaEventHandler {
         uint256 total = positionRegistry.positionCount();
         uint256 checked = 0;
 
-        for (uint256 i = 0; i < total; i++) {
+        for (uint256 i = 1; i <= total; i++) {
             PositionRegistry.Position memory position = positionRegistry
                 .getPosition(i);
 

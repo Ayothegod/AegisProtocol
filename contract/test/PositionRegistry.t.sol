@@ -231,7 +231,7 @@ contract PositionRegistryTest is Test {
     function test_EmitsRegisteredEvent() public {
         vm.prank(user1);
         vm.expectEmit(true, true, false, false);
-        emit PositionRegistry.PositionRegistered(0, user1);
+        emit PositionRegistry.PositionRegistered(1, user1);
         registry.registerPosition(
             COLLATERAL,
             DEBT,
