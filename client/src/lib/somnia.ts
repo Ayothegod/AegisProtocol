@@ -10,8 +10,8 @@ export const somniaTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: [import.meta.env.VITE_SOMNIA_RPC_URL],
-      webSocket: [import.meta.env.VITE_SOMNIA_WSS_URL],
+      http: [process.env.VITE_SOMNIA_RPC_URL as string],
+      webSocket: [process.env.VITE_SOMNIA_WSS_URL as string],
     },
   },
   blockExplorers: {

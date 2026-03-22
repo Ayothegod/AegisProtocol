@@ -9,7 +9,8 @@
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "subscribe": "tsx scripts/subscribe.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -24,6 +25,7 @@
     "@tanstack/router-plugin": "^1.132.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
     "lucide-react": "^0.545.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
@@ -32,9 +34,12 @@
     "shadcn": "^4.0.8",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.1.18",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "tw-animate-css": "^1.4.0",
     "viem": "^2.47.5",
     "wagmi": "^3.5.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
