@@ -44,8 +44,6 @@ const walletClient = createWalletClient({
 
 const sdk = new SDK({ public: publicClient, wallet: walletClient });
 
-// Somnia system precompile address — source of BlockTick events
-// Reactive tx is executed by validator address - 0x0000000000000000000000000000000000000100
 // const SOMNIA_REACTIVITY_PRECOMPILE =
 // ("0x0000000000000000000000000000000000000100");
 // const BLOCK_TICK_SELECTOR = keccak256(toBytes("BlockTick(uint64)"));
@@ -54,80 +52,50 @@ async function main() {
   console.log("Creating subscriptions for Liquidation Guardian...");
   console.log("Handler:", guardianMonitorAddress);
 
-  // Fires whenever a user registers or updates a position
-  // console.log("\n1. Creating PositionRegistry subscription...");
+  console.log("\n1. Creating PositionRegistry subscription...");
 
-  // const sub1 = await sdk.createSoliditySubscription({
-  //   handlerContractAddress: guardianMonitorAddress as `0x${string}`,
-  //   emitter: positionRegistryAddress as `0x${string}`,
-  //   // eventTopics:[PositionRegistered and PositionUpdated], precision to avoid wasting gas on deleteEvents
-  //   priorityFeePerGas: parseGwei("2"),
-  //   maxFeePerGas: parseGwei("10"),
-  //   gasLimit: 3_000_000n,
-  //   isGuaranteed: true,
-  //   isCoalesced: false,
-  // });
+  const sub1 = await sdk.createSoliditySubscription({
+    handlerContractAddress: guardianMonitorAddress as `0x${string}`,
+    emitter: positionRegistryAddress as `0x${string}`,
+    // eventTopics:[PositionRegistered and PositionUpdated], precision to avoid wasting gas on deleteEvents
+    priorityFeePerGas: parseGwei("2"),
+    maxFeePerGas: parseGwei("10"),
+    gasLimit: 3_000_000n,
+    isGuaranteed: true,
+    isCoalesced: false,
+  });
 
-  // if (sub1 instanceof Error) {
-  //   console.error("Sub 1 failed:", sub1.message);
-  //   process.exit(1);
-  // }
+  if (sub1 instanceof Error) {
+    console.error("Sub 1 failed:", sub1.message);
+    process.exit(1);
+  }
 
-  // const receipt1 = await publicClient.waitForTransactionReceipt({ hash: sub1 });
-  // console.log("✅ PositionRegistry subscription created:", sub1);
-  // console.log("Sub 1 receipt:", receipt1);
-  // console.log("Receipt1:", receipt1.status);
+  const receipt1 = await publicClient.waitForTransactionReceipt({ hash: sub1 });
+  console.log("✅ PositionRegistry subscription created:", sub1);
+  console.log("Sub 1 receipt:", receipt1);
+  console.log("Receipt1:", receipt1.status);
 
   // Fires every block (~10x per second on Somnia)
-  // This catches price drops without any user action
   console.log("\n2. Creating BlockTick subscription...");
 
-  // const sub2 = await sdk.createSoliditySubscription({
-  //   handlerContractAddress: guardianMonitorAddress as `0x${string}`,
-  //   emitter: SOMNIA_REACTIVITY_PRECOMPILE as `0x${string}`,
-  //   eventTopics: [BLOCK_TICK_SELECTOR as `0x${string}`],
-  //   priorityFeePerGas: parseGwei("2"),
-  //   maxFeePerGas: parseGwei("10"),
-  //   gasLimit: 3_000_000n,
-  //   isGuaranteed: true,
-  //   isCoalesced: false,
-  // });
+  const sub2 = await sdk.createOnchainBlockTickSubscription({
+    handlerContractAddress: guardianMonitorAddress as `0x${string}`,
+    priorityFeePerGas: parseGwei("2"),
+    maxFeePerGas: parseGwei("10"),
+    gasLimit: 3_000_000n,
+    isGuaranteed: true,
+    isCoalesced: false,
+  });
 
-  // const sub2 = await sdk.createOnchainBlockTickSubscription({
-  //   handlerContractAddress: guardianMonitorAddress as `0x${string}`,
-  //   priorityFeePerGas: parseGwei("2"),
-  //   maxFeePerGas: parseGwei("10"),
-  //   gasLimit: 3_000_000n,
-  //   isGuaranteed: true,
-  //   isCoalesced: false,
-  // });
-
-  // if (sub2 instanceof Error) {
-  //   console.error("Sub 2 failed:", sub2.message);
-  //   process.exit(1);
-  // }
-
-  // console.log("✅ BlockTick subscription created:", sub2);
-  // const receipt2 = await publicClient.waitForTransactionReceipt({ hash: sub2 });
-  // console.log("Tx:", receipt2);
-  // console.log("Receipt:", receipt2.status);
-
-  try {
-    const txHash = await sdk.createOnchainBlockTickSubscription({
-      blockNumber: BigInt(10),
-      handlerContractAddress: guardianMonitorAddress as `0x${string}`,
-      // Optional: Override default handler selector (defaults to onEvent)
-      // handlerFunctionSelector: '0xYourSelector',
-      priorityFeePerGas: BigInt(1000000000), // 1 nanoSOMI
-      maxFeePerGas: BigInt(10000000000), // 10 nanoSOMI
-      gasLimit: BigInt(2000000),
-      isGuaranteed: true, // Ensure delivery even if delayed
-      isCoalesced: false, // Handle each event separately
-    });
-    console.log("Subscription created with tx hash:", txHash);
-  } catch (error) {
-    console.error("Error creating subscription:", error);
+  if (sub2 instanceof Error) {
+    console.error("Sub 2 failed:", sub2.message);
+    process.exit(1);
   }
+
+  console.log("✅ BlockTick subscription created:", sub2);
+  const receipt2 = await publicClient.waitForTransactionReceipt({ hash: sub2 });
+  console.log("Tx:", receipt2);
+  console.log("Receipt:", receipt2.status);
 
   console.log("\n🛡 Liquidation Guardian is live!");
   console.log("   Watching PositionRegistry for position changes");
@@ -138,22 +106,36 @@ async function main() {
 }
 // main();
 
-async function setupBlockTick() {
+async function getSubscriptionData() {
   try {
-    const txHash = await sdk.createOnchainBlockTickSubscription({
-      blockNumber: BigInt(10),
-      handlerContractAddress: guardianMonitorAddress as `0x${string}`,
-      priorityFeePerGas: BigInt(1000000000),
-      maxFeePerGas: BigInt(10000000000),
-      gasLimit: BigInt(2000000),
-      isGuaranteed: true,
-      isCoalesced: false,
-    });
+    // get subscription ID from your sub1 receipt logs
+    const info = await sdk.getSubscriptionInfo(1n); // try 1n first
 
-    console.log("Subscription created with tx hash:", txHash);
+    console.log("Subscription info for ID 1n:", info);
   } catch (error) {
-    console.error("Error creating subscription:", error);
+    console.error("Error getting subscription info:", error);
   }
 }
 
-setupBlockTick();
+// getSubscriptionData();
+
+async function findMySub() {
+  const myHandler = guardianMonitorAddress as `0x${string}`;
+
+  for (let i = 1n; i < 10n; i++) {
+    const info = await sdk.getSubscriptionInfo(i);
+    if (info instanceof Error) continue;
+
+    console.log({
+      address: info.owner,
+      // next: info.subscriptionData.handlerContractAddress,
+    });
+
+    // const [data] = info;
+    // if (data.handlerContractAddress.toLowerCase() === myHandler) {
+    //   console.log(`Found! ID: ${i}`, info);
+    // }
+  }
+}
+
+findMySub();
