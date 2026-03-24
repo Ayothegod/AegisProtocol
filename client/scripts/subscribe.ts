@@ -126,6 +126,7 @@ async function findMySub() {
     const info = await sdk.getSubscriptionInfo(i);
     if (info instanceof Error) continue;
 
+    console.log("info data:", info[0]);
     console.log({
       address: info.owner,
       // next: info.subscriptionData.handlerContractAddress,
