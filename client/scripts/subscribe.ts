@@ -136,5 +136,24 @@ async function main() {
     "\n   Save these tx hashes — you'll need them to query or cancel subscriptions.",
   );
 }
+// main();
 
-main();
+async function setupBlockTick() {
+  try {
+    const txHash = await sdk.createOnchainBlockTickSubscription({
+      blockNumber: BigInt(10),
+      handlerContractAddress: guardianMonitorAddress as `0x${string}`,
+      priorityFeePerGas: BigInt(1000000000),
+      maxFeePerGas: BigInt(10000000000),
+      gasLimit: BigInt(2000000),
+      isGuaranteed: true,
+      isCoalesced: false,
+    });
+
+    console.log("Subscription created with tx hash:", txHash);
+  } catch (error) {
+    console.error("Error creating subscription:", error);
+  }
+}
+
+setupBlockTick();
